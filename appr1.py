@@ -29,7 +29,7 @@ class pdf_vector():
 
     
     def rnn(self,text):
-        # Tokenize the text
+
         tokenizer = Tokenizer()
         tokenizer.fit_on_texts([text])
         sequences = tokenizer.texts_to_sequences([text])
@@ -38,22 +38,21 @@ class pdf_vector():
         max_length = max([len(s) for s in sequences])
         padded_sequences = pad_sequences(sequences, maxlen=max_length)
 
-        # Define the RNN model
+   
         model = Sequential()
         model.add(Embedding(len(tokenizer.word_index) + 1, 100, input_length=max_length))
         model.add(LSTM(100))
         model.add(Dense(1))
 
-        # Compile the model
+
         model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
 
-        # Create dummy target data
+  
         target_data = np.random.rand(padded_sequences.shape[0],1)
 
-        # Fit the model
         model.fit(padded_sequences, target_data, epochs=10, verbose=0,batch_size=32, callbacks=[EarlyStopping(monitor='loss', patience=3)])
 
-        #get the embedding
+
         embedding = model.get_weights()[0]
 
         return embedding.flatten()
@@ -65,7 +64,7 @@ class pdf_vector():
         model = BertModel.from_pretrained('bert-base-uncased')
         tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-        # Define the maximum length of input text
+        #maximum length of input text
         max_length = 512
 
         # Tokenize the text
@@ -107,13 +106,13 @@ class pdf_vector():
 
         model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-        # Create dummy target data
+
         target_data = np.random.randint(0, 2, (len(sentences), 1))
 
-        # Fit the model
+
         model.fit(padded_docs, target_data, epochs=10, verbose=0, batch_size=32, callbacks=[EarlyStopping(monitor='accuracy', patience=3)])
 
-        #get the embedding
+
         embedding = model.layers[0].get_weights()[0]
 
         return embedding.flatten()
@@ -121,29 +120,18 @@ class pdf_vector():
         
     # Latent Dirichlet Allocation (LDA)
     def lda(self,sentences):
-
-        # Tokenize the documents
+  
         texts = [doc.split() for doc in sentences]
-
-        # Create the dictionary
         dictionary = Dictionary(texts)
-
-        # Convert the documents into bag-of-words representations
         corpus = [dictionary.doc2bow(text) for text in texts]
-
-        # Train the LDA model
         model = gensim.models.LdaModel(corpus, num_topics=3, id2word=dictionary)
-
-        # Transform the documents into vector representations
         vectors = [model[doc] for doc in corpus]
-        #print(model.print_topics())
 
         return vectors.flatten()
 
          # Non-Negative Matrix Factorization (NMF)
     def nmf(self,corpus):
 
-        #corpus = ['this is the first document',          'this document is the second document',          'and this is the third one',          'is this the first document']
 
         vectorizer = TfidfVectorizer()
         X = vectorizer.fit_transform(corpus)
@@ -159,7 +147,6 @@ class pdf_vector():
         vectorizer = CountVectorizer(stop_words='english')
         doc_word = vectorizer.fit_transform(docs)
 
-        # Fit the LSA model
         lsa = TruncatedSVD(n_components=2)
         doc_topic = lsa.fit_transform(doc_word)
 
@@ -176,15 +163,12 @@ class pdf_vector():
     #doc2vec
     def doc2vec(self,documents):
 
-        #documents = ['this is the first document',             'this document is the second document',             'and this is the third one',             'is this the first document']
-
         tagged_documents = [gensim.models.doc2vec.TaggedDocument(doc.split(), [i]) for i, doc in enumerate(documents)]
 
         model = gensim.models.Doc2Vec(tagged_documents, vector_size=100, window=5, min_count=1, workers=4)
 
         doc_vectors = model.docvecs
 
-        # You can get the vector representation of a document using the following command
         return doc_vectors[0]
 
     
